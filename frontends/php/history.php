@@ -74,7 +74,8 @@ include_once "include/page_header.php";
 		"form"=>		array(T_ZBX_STR, O_OPT, P_SYS,	null,	null),
 		"form_copy_to"=>	array(T_ZBX_STR, O_OPT, P_SYS,	null,	null),
 		"form_refresh"=>	array(T_ZBX_INT, O_OPT,	null,	null,	null),
-		"fullscreen"=>		array(T_ZBX_INT, O_OPT,	P_SYS,	null,	null)
+    "fullscreen"=>		array(T_ZBX_INT, O_OPT,	P_SYS,	null,	null),
+    "limit" => array(T_ZBX_INT, O_OPT, null, null, null)                              // Limit for the SQL Query
 	);
 
 	check_fields($fields);
