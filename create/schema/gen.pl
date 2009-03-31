@@ -96,6 +96,58 @@ $c{"before"}="/*
 ZBX_TABLE	tables[]={
 ";
 
+
+%ruby=(	"type"		=>	"rubycode",
+	"database"	=>	"",
+	"after"		=>	"\t{0}\n};\n",
+	"t_bigint"	=>	"Integer",
+	"t_id"		=>	"Integer",
+	"t_integer"	=>	"Integer",
+	"t_time"	=>	"DateTime",
+	"t_serial"	=>	"Integer",
+	"t_double"	=>	"Float",
+	"t_varchar"	=>	"String",
+	"t_char"	=>	"String",
+	"t_image"	=>	"ZBX_TYPE_BLOB",
+	"t_history_log"	=>	"Text",
+	"t_history_text"=>	"Text",
+	"t_blob"	=>	"ZBX_TYPE_BLOB",
+	"t_item_param"	=>	"Text",
+	"t_cksum_text"	=>	"Text"  
+);
+
+
+$ruby{"before"}="#!/usr/bin/ruby -w
+
+# ZABBIX
+# Copyright (C) 2009, Bjoern Rennhak, Centillion (http://www.centillion.co.jp)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+
+# = This is a Ruby DataMapper capsulation, it needs the following gems
+# data_mapper, data_objects, do_<your database name here>
+
+require 'dm-core'
+# require 'dm-validations'
+# require 'dm-timestamps'
+
+";
+
+
 %oracle=("t_bigint"	=>	"number(20)",
 	"database"	=>	"oracle",
 	"before"	=>	"",
@@ -167,11 +219,13 @@ sub newstate
 			if($output{"type"} eq "sql" && $new eq "index") { print "$pkey\n)$output{'table_options'};\n"; }
 			if($output{"type"} eq "sql" && $new eq "table") { print "$pkey\n)$output{'table_options'};\n"; }
 			if($output{"type"} eq "code" && $new eq "table") { print ",\n\t\t{0}\n\t\t}\n\t},\n"; }
+			if($output{"type"} eq "rubycode" && $new eq "table") { print ",\nend\n\n"; }
 			if($new eq "field") { print ",\n" }
 		}
 		case "index"	{
 			if($output{"type"} eq "sql" && $new eq "table") { print ""; }
 			if($output{"type"} eq "code" && $new eq "table") { print ",\n\t\t{0}\n\t\t}\n\t},\n"; }
+			if($output{"type"} eq "rubycode" && $new eq "table") { print ",\nend\n\n"; }
 		}
 	 	case "table"	{
 			print "";
@@ -199,7 +253,24 @@ sub process_table
 		}
 		print "\t{\"${table_name}\",\t\"${pkey}\",\t${flags},\n\t\t{\n";
 	}
-	else
+	elsif( $output{"type"} eq "rubycode" )
+  {
+ #	        {"services",    "serviceid",    ZBX_SYNC,
+		if($flags eq "")
+		{
+			$flags="0";
+		}
+		for ($flags) {
+			s/,/ \| /;
+		}
+    print "class ";
+    $_ = ${table_name};
+    $_ =~ s/\b(\w)/\U$1/g;
+    print "$_\n";
+    print "\tinclude DataMapper::Resource\n\n";
+    #print "\t{\"${table_name}\",\t\"${pkey}\",\t${flags},\n\t\t{\n";
+
+  } else
 	{
 		if($pkey ne "")
 		{
@@ -247,7 +318,28 @@ sub process_field
 			$rel = "NULL";
 		}
 		print "\t\t{\"${name}\",\t$type,\t${flags},\t${rel}}";
-	}
+	} elsif( $output{"type"} eq "rubycode" ) 
+  {
+ 		$type=$output{$type_short};
+#{"linkid",      ZBX_TYPE_INT,   ZBX_SYNC},
+		if ($null eq "NOT NULL") {
+			if ($flags ne "0") {
+				$flags="ZBX_NOTNULL | ".$flags;
+			} else {
+				$flags="ZBX_NOTNULL";
+			}
+		}
+		for ($flags) {
+			s/,/ \| /;
+		}
+		if ($rel) {
+			$rel = "\"${rel}\"";
+		} else {
+			$rel = "NULL";
+		}
+    #print "\t\t{\"${name}\",\t$type,\t${flags},\t${rel}}";
+    print "\tproperty :$name,\t\t\t$type";
+  }
 	else
 	{
 		$a=$output{$type_short};
@@ -265,6 +357,8 @@ sub process_field
 				$default=""; 
 			}
 		}
+
+
 
 		# Special processing for Oracle "default 'ZZZ' not null" -> "default 'ZZZ'. NULL=='' in Oracle!"
 		if(($output{"database"} eq "oracle") && (0==index($type_2,"varchar2")))
@@ -303,6 +397,12 @@ sub process_index
 		return;
 	}
 
+	if($output{"type"} eq "rubycode")
+	{
+		return;
+	}
+
+
 	($name,$fields)=split(/\|/, $line,2);
 
 	$ifnotexists = "";
@@ -323,8 +423,8 @@ sub process_index
 
 sub usage
 {
-	printf "Usage: $0 [c|mysql|oracle|php|postgresql|sqlite]\n";
-	printf "The script generates ZABBIX SQL schemas and C/PHP code for different database engines.\n";
+	printf "Usage: $0 [c|ruby|mysql|oracle|php|postgresql|sqlite]\n";
+	printf "The script generates ZABBIX SQL schemas and C/PHP/Ruby code for different database engines.\n";
 	exit;
 }
 
@@ -337,13 +437,14 @@ sub main
 
 	$format=$ARGV[0];
 	switch ($format) {
-		case "c"		{ %output=%c; }
-		case "mysql"		{ %output=%mysql; }
-		case "oracle"		{ %output=%oracle; }
-		case "php"		{ %output=%php; }
-		case "postgresql"	{ %output=%postgresql; }
-		case "sqlite"		{ %output=%sqlite; }
-		else			{ usage(); }
+		case "c"          { %output=%c; }
+    case "ruby"       { %output=%ruby; }
+		case "mysql"      { %output=%mysql; }
+		case "oracle"     { %output=%oracle; }
+		case "php"        { %output=%php; }
+		case "postgresql" { %output=%postgresql; }
+		case "sqlite"     { %output=%sqlite; }
+		else              { usage(); }
 	}
 
 	print $output{"before"};

@@ -1,0 +1,20 @@
+Gen.pl
+------
+
+The script generates ZABBIX SQL schemas and C/PHP/Ruby code for different database engines.
+
+
+
+Ruby
+----
+
+The Ruby interface is built on the DataMapper ORM an requires some libraries to work for you.
+
+You will need the following gems:
+
+    o data_mapper                 Meta package for all DM-* libraries
+    o data_objects                Data Objects library http://rubyforge.org/projects/dorb
+    o do_sqlite3                  Data Objects capsulation for SQLite3
+    o other do_$database files as needed
+
+
