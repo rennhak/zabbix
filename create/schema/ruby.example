@@ -1,0 +1,1152 @@
+#!/usr/bin/ruby -w
+
+# ZABBIX
+# Copyright (C) 2000-2005 SIA Zabbix
+# Copyright (C) 2009, Bjoern Rennhak, Centillion (http://www.centillion.co.jp)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+# = This is a Ruby DataMapper capsulation, it needs the following gems
+# data_mapper, data_objects, do_<your database name here>
+
+require 'dm-core'
+# require 'dm-validations'
+# require 'dm-timestamps'
+
+= Slideshows
+class Slideshows
+	include DataMapper::Resource
+
+	property :slideshowid,			Integer,
+	property :name,			String,
+	property :delay,			Integer,
+end
+
+= Slides
+class Slides
+	include DataMapper::Resource
+
+	property :slideid,			Integer,
+	property :slideshowid,			Integer,
+	property :screenid,			Integer,
+	property :step,			Integer,
+	property :delay,			Integer,
+end
+
+= Drules
+class Drules
+	include DataMapper::Resource
+
+	property :druleid,			Integer,
+	property :proxy_hostid,			Integer,
+	property :name,			String,
+	property :iprange,			String,
+	property :delay,			Integer,
+	property :nextcheck,			Integer,
+	property :status,			Integer,
+end
+
+= Dchecks
+class Dchecks
+	include DataMapper::Resource
+
+	property :dcheckid,			Integer,
+	property :druleid,			Integer,
+	property :type,			Integer,
+	property :key_,			String,
+	property :snmp_community,			String,
+	property :ports,			String,
+end
+
+= Dhosts
+class Dhosts
+	include DataMapper::Resource
+
+	property :dhostid,			Integer,
+	property :druleid,			Integer,
+	property :ip,			String,
+	property :status,			Integer,
+	property :lastup,			Integer,
+	property :lastdown,			Integer,
+end
+
+= Dservices
+class Dservices
+	include DataMapper::Resource
+
+	property :dserviceid,			Integer,
+	property :dhostid,			Integer,
+	property :type,			Integer,
+	property :key_,			String,
+	property :value,			String,
+	property :port,			Integer,
+	property :status,			Integer,
+	property :lastup,			Integer,
+	property :lastdown,			Integer,
+end
+
+= Ids
+class Ids
+	include DataMapper::Resource
+
+	property :nodeid,			Integer,
+	property :table_name,			String,
+	property :field_name,			String,
+	property :nextid,			Integer,
+end
+
+= Httptest
+class Httptest
+	include DataMapper::Resource
+
+	property :httptestid,			Integer,
+	property :name,			String,
+	property :applicationid,			Integer,
+	property :lastcheck,			Integer,
+	property :nextcheck,			Integer,
+	property :curstate,			Integer,
+	property :curstep,			Integer,
+	property :lastfailedstep,			Integer,
+	property :delay,			Integer,
+	property :status,			Integer,
+	property :macros,			ZBX_TYPE_BLOB,
+	property :agent,			String,
+	property :time,			Float,
+	property :error,			String,
+end
+
+= Httpstep
+class Httpstep
+	include DataMapper::Resource
+
+	property :httpstepid,			Integer,
+	property :httptestid,			Integer,
+	property :name,			String,
+	property :no,			Integer,
+	property :url,			String,
+	property :timeout,			Integer,
+	property :posts,			ZBX_TYPE_BLOB,
+	property :required,			String,
+	property :status_codes,			String,
+end
+
+= Httpstepitem
+class Httpstepitem
+	include DataMapper::Resource
+
+	property :httpstepitemid,			Integer,
+	property :httpstepid,			Integer,
+	property :itemid,			Integer,
+	property :type,			Integer,
+end
+
+= Httptestitem
+class Httptestitem
+	include DataMapper::Resource
+
+	property :httptestitemid,			Integer,
+	property :httptestid,			Integer,
+	property :itemid,			Integer,
+	property :type,			Integer,
+end
+
+= Nodes
+class Nodes
+	include DataMapper::Resource
+
+	property :nodeid,			Integer,
+	property :name,			String,
+	property :timezone,			Integer,
+	property :ip,			String,
+	property :port,			Integer,
+	property :slave_history,			Integer,
+	property :slave_trends,			Integer,
+	property :nodetype,			Integer,
+	property :masterid,			Integer,
+end
+
+= Node_cksum
+class Node_cksum
+	include DataMapper::Resource
+
+	property :nodeid,			Integer,
+	property :tablename,			String,
+	property :recordid,			Integer,
+	property :cksumtype,			Integer,
+	property :cksum,			Text,
+	property :sync,			String,
+end
+
+= Services_times
+class Services_times
+	include DataMapper::Resource
+
+	property :timeid,			Integer,
+	property :serviceid,			Integer,
+	property :type,			Integer,
+	property :ts_from,			Integer,
+	property :ts_to,			Integer,
+	property :note,			String,
+end
+
+= Alerts
+class Alerts
+	include DataMapper::Resource
+
+	property :alertid,			Integer,
+	property :actionid,			Integer,
+	property :eventid,			Integer,
+	property :userid,			Integer,
+	property :clock,			DateTime,
+	property :mediatypeid,			Integer,
+	property :sendto,			String,
+	property :subject,			String,
+	property :message,			ZBX_TYPE_BLOB,
+	property :status,			Integer,
+	property :retries,			Integer,
+	property :error,			String,
+	property :nextcheck,			Integer,
+	property :esc_step,			Integer,
+	property :alerttype,			Integer,
+end
+
+= History
+class History
+	include DataMapper::Resource
+
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Float,
+end
+
+= History_sync
+class History_sync
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :nodeid,			Integer,
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Float,
+end
+
+= History_uint
+class History_uint
+	include DataMapper::Resource
+
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Integer,
+end
+
+= History_uint_sync
+class History_uint_sync
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :nodeid,			Integer,
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Integer,
+end
+
+= History_str
+class History_str
+	include DataMapper::Resource
+
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			String,
+end
+
+= History_str_sync
+class History_str_sync
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :nodeid,			Integer,
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			String,
+end
+
+= History_log
+class History_log
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :timestamp,			DateTime,
+	property :source,			String,
+	property :severity,			Integer,
+	property :value,			Text,
+end
+
+= History_text
+class History_text
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Text,
+end
+
+= Proxy_history
+class Proxy_history
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :timestamp,			DateTime,
+	property :source,			String,
+	property :severity,			Integer,
+	property :value,			Text,
+end
+
+= Proxy_dhistory
+class Proxy_dhistory
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :clock,			DateTime,
+	property :druleid,			Integer,
+	property :type,			Integer,
+	property :ip,			String,
+	property :port,			Integer,
+	property :key_,			String,
+	property :value,			String,
+	property :status,			Integer,
+end
+
+= Events
+class Events
+	include DataMapper::Resource
+
+	property :eventid,			Integer,
+	property :source,			Integer,
+	property :object,			Integer,
+	property :objectid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Integer,
+	property :acknowledged,			Integer,
+end
+
+= Trends
+class Trends
+	include DataMapper::Resource
+
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :num,			Integer,
+	property :value_min,			Float,
+	property :value_avg,			Float,
+	property :value_max,			Float,
+end
+
+= Trends_uint
+class Trends_uint
+	include DataMapper::Resource
+
+	property :itemid,			Integer,
+	property :clock,			DateTime,
+	property :num,			Integer,
+	property :value_min,			Integer,
+	property :value_avg,			Integer,
+	property :value_max,			Integer,
+end
+
+= Acknowledges
+class Acknowledges
+	include DataMapper::Resource
+
+	property :acknowledgeid,			Integer,
+	property :userid,			Integer,
+	property :eventid,			Integer,
+	property :clock,			DateTime,
+	property :message,			String,
+end
+
+= Auditlog
+class Auditlog
+	include DataMapper::Resource
+
+	property :auditid,			Integer,
+	property :userid,			Integer,
+	property :clock,			DateTime,
+	property :action,			Integer,
+	property :resourcetype,			Integer,
+	property :details,			String,
+	property :ip,			String,
+	property :resourceid,			Integer,
+	property :resourcename,			String,
+end
+
+= Auditlog_details
+class Auditlog_details
+	include DataMapper::Resource
+
+	property :auditdetailid,			Integer,
+	property :auditid,			Integer,
+	property :table_name,			String,
+	property :field_name,			String,
+	property :oldvalue,			ZBX_TYPE_BLOB,
+	property :newvalue,			ZBX_TYPE_BLOB,
+end
+
+= Service_alarms
+class Service_alarms
+	include DataMapper::Resource
+
+	property :servicealarmid,			Integer,
+	property :serviceid,			Integer,
+	property :clock,			DateTime,
+	property :value,			Integer,
+end
+
+= Actions
+class Actions
+	include DataMapper::Resource
+
+	property :actionid,			Integer,
+	property :name,			String,
+	property :eventsource,			Integer,
+	property :evaltype,			Integer,
+	property :status,			Integer,
+	property :esc_period,			Integer,
+	property :def_shortdata,			String,
+	property :def_longdata,			ZBX_TYPE_BLOB,
+	property :recovery_msg,			Integer,
+	property :r_shortdata,			String,
+	property :r_longdata,			ZBX_TYPE_BLOB,
+end
+
+= Operations
+class Operations
+	include DataMapper::Resource
+
+	property :operationid,			Integer,
+	property :actionid,			Integer,
+	property :operationtype,			Integer,
+	property :object,			Integer,
+	property :objectid,			Integer,
+	property :shortdata,			String,
+	property :longdata,			ZBX_TYPE_BLOB,
+	property :esc_period,			Integer,
+	property :esc_step_from,			Integer,
+	property :esc_step_to,			Integer,
+	property :default_msg,			Integer,
+	property :evaltype,			Integer,
+end
+
+= Opconditions
+class Opconditions
+	include DataMapper::Resource
+
+	property :opconditionid,			Integer,
+	property :operationid,			Integer,
+	property :conditiontype,			Integer,
+	property :operator,			Integer,
+	property :value,			String,
+end
+
+= Escalations
+class Escalations
+	include DataMapper::Resource
+
+	property :escalationid,			Integer,
+	property :actionid,			Integer,
+	property :triggerid,			Integer,
+	property :eventid,			Integer,
+	property :r_eventid,			Integer,
+	property :nextcheck,			DateTime,
+	property :esc_step,			Integer,
+	property :status,			Integer,
+end
+
+= Applications
+class Applications
+	include DataMapper::Resource
+
+	property :applicationid,			Integer,
+	property :hostid,			Integer,
+	property :name,			String,
+	property :templateid,			Integer,
+end
+
+= Conditions
+class Conditions
+	include DataMapper::Resource
+
+	property :conditionid,			Integer,
+	property :actionid,			Integer,
+	property :conditiontype,			Integer,
+	property :operator,			Integer,
+	property :value,			String,
+end
+
+= Config
+class Config
+	include DataMapper::Resource
+
+	property :configid,			Integer,
+	property :alert_history,			Integer,
+	property :event_history,			Integer,
+	property :refresh_unsupported,			Integer,
+	property :work_period,			String,
+	property :alert_usrgrpid,			Integer,
+	property :event_ack_enable,			Integer,
+	property :event_expire,			Integer,
+	property :event_show_max,			Integer,
+	property :default_theme,			String,
+	property :authentication_type,			Integer,
+	property :ldap_host,			String,
+	property :ldap_port,			Integer,
+	property :ldap_base_dn,			String,
+	property :ldap_bind_dn,			String,
+	property :ldap_bind_password,			String,
+	property :ldap_search_attribute,			String,
+end
+
+= Functions
+class Functions
+	include DataMapper::Resource
+
+	property :functionid,			Integer,
+	property :itemid,			Integer,
+	property :triggerid,			Integer,
+	property :lastvalue,			String,
+	property :function,			String,
+	property :parameter,			String,
+end
+
+= Graphs
+class Graphs
+	include DataMapper::Resource
+
+	property :graphid,			Integer,
+	property :name,			String,
+	property :width,			Integer,
+	property :height,			Integer,
+	property :ymin_type,			Integer,
+	property :ymax_type,			Integer,
+	property :yaxismin,			Float,
+	property :yaxismax,			Float,
+	property :ymin_itemid,			Integer,
+	property :ymax_itemid,			Integer,
+	property :templateid,			Integer,
+	property :show_work_period,			Integer,
+	property :show_triggers,			Integer,
+	property :graphtype,			Integer,
+	property :show_legend,			Integer,
+	property :show_3d,			Integer,
+	property :percent_left,			Float,
+	property :percent_right,			Float,
+end
+
+= Graphs_items
+class Graphs_items
+	include DataMapper::Resource
+
+	property :gitemid,			Integer,
+	property :graphid,			Integer,
+	property :itemid,			Integer,
+	property :drawtype,			Integer,
+	property :sortorder,			Integer,
+	property :color,			String,
+	property :yaxisside,			Integer,
+	property :calc_fnc,			Integer,
+	property :type,			Integer,
+	property :periods_cnt,			Integer,
+end
+
+= Groups
+class Groups
+	include DataMapper::Resource
+
+	property :groupid,			Integer,
+	property :name,			String,
+end
+
+= Help_items
+class Help_items
+	include DataMapper::Resource
+
+	property :itemtype,			Integer,
+	property :key_,			String,
+	property :description,			String,
+end
+
+= Hosts
+class Hosts
+	include DataMapper::Resource
+
+	property :hostid,			Integer,
+	property :proxy_hostid,			Integer,
+	property :host,			String,
+	property :dns,			String,
+	property :useip,			Integer,
+	property :ip,			String,
+	property :port,			Integer,
+	property :status,			Integer,
+	property :disable_until,			Integer,
+	property :error,			String,
+	property :available,			Integer,
+	property :errors_from,			Integer,
+	property :lastaccess,			Integer,
+	property :inbytes,			Integer,
+	property :outbytes,			Integer,
+	property :useipmi,			Integer,
+	property :ipmi_port,			Integer,
+	property :ipmi_authtype,			Integer,
+	property :ipmi_privilege,			Integer,
+	property :ipmi_username,			String,
+	property :ipmi_password,			String,
+	property :ipmi_disable_until,			Integer,
+	property :ipmi_available,			Integer,
+	property :snmp_disable_until,			Integer,
+	property :snmp_available,			Integer,
+	property :maintenanceid,			Integer,
+	property :maintenance_status,			Integer,
+	property :maintenance_type,			Integer,
+	property :maintenance_from,			Integer,
+	property :ipmi_ip,			String,
+end
+
+= Hosts_groups
+class Hosts_groups
+	include DataMapper::Resource
+
+	property :hostgroupid,			Integer,
+	property :hostid,			Integer,
+	property :groupid,			Integer,
+end
+
+= Hosts_profiles
+class Hosts_profiles
+	include DataMapper::Resource
+
+	property :hostid,			Integer,
+	property :devicetype,			String,
+	property :name,			String,
+	property :os,			String,
+	property :serialno,			String,
+	property :tag,			String,
+	property :macaddress,			String,
+	property :hardware,			ZBX_TYPE_BLOB,
+	property :software,			ZBX_TYPE_BLOB,
+	property :contact,			ZBX_TYPE_BLOB,
+	property :location,			ZBX_TYPE_BLOB,
+	property :notes,			ZBX_TYPE_BLOB,
+end
+
+= Hosts_profiles_ext
+class Hosts_profiles_ext
+	include DataMapper::Resource
+
+	property :hostid,			Integer,
+	property :device_alias,			String,
+	property :device_type,			String,
+	property :device_chassis,			String,
+	property :device_os,			String,
+	property :device_os_short,			String,
+	property :device_hw_arch,			String,
+	property :device_serial,			String,
+	property :device_model,			String,
+	property :device_tag,			String,
+	property :device_vendor,			String,
+	property :device_contract,			String,
+	property :device_who,			String,
+	property :device_status,			String,
+	property :device_app_01,			String,
+	property :device_app_02,			String,
+	property :device_app_03,			String,
+	property :device_app_04,			String,
+	property :device_app_05,			String,
+	property :device_url_1,			String,
+	property :device_url_2,			String,
+	property :device_url_3,			String,
+	property :device_networks,			ZBX_TYPE_BLOB,
+	property :device_notes,			ZBX_TYPE_BLOB,
+	property :device_hardware,			ZBX_TYPE_BLOB,
+	property :device_software,			ZBX_TYPE_BLOB,
+	property :ip_subnet_mask,			String,
+	property :ip_router,			String,
+	property :ip_macaddress,			String,
+	property :oob_ip,			String,
+	property :oob_subnet_mask,			String,
+	property :oob_router,			String,
+	property :date_hw_buy,			String,
+	property :date_hw_install,			String,
+	property :date_hw_expiry,			String,
+	property :date_hw_decomm,			String,
+	property :site_street_1,			String,
+	property :site_street_2,			String,
+	property :site_street_3,			String,
+	property :site_city,			String,
+	property :site_state,			String,
+	property :site_country,			String,
+	property :site_zip,			String,
+	property :site_rack,			String,
+	property :site_notes,			ZBX_TYPE_BLOB,
+	property :poc_1_name,			String,
+	property :poc_1_email,			String,
+	property :poc_1_phone_1,			String,
+	property :poc_1_phone_2,			String,
+	property :poc_1_cell,			String,
+	property :poc_1_screen,			String,
+	property :poc_1_notes,			ZBX_TYPE_BLOB,
+	property :poc_2_name,			String,
+	property :poc_2_email,			String,
+	property :poc_2_phone_1,			String,
+	property :poc_2_phone_2,			String,
+	property :poc_2_cell,			String,
+	property :poc_2_screen,			String,
+	property :poc_2_notes,			ZBX_TYPE_BLOB,
+end
+
+= Hosts_templates
+class Hosts_templates
+	include DataMapper::Resource
+
+	property :hosttemplateid,			Integer,
+	property :hostid,			Integer,
+	property :templateid,			Integer,
+end
+
+= Housekeeper
+class Housekeeper
+	include DataMapper::Resource
+
+	property :housekeeperid,			Integer,
+	property :tablename,			String,
+	property :field,			String,
+	property :value,			Integer,
+end
+
+= Images
+class Images
+	include DataMapper::Resource
+
+	property :imageid,			Integer,
+	property :imagetype,			Integer,
+	property :name,			String,
+	property :image,			ZBX_TYPE_BLOB,
+end
+
+= Items
+class Items
+	include DataMapper::Resource
+
+	property :itemid,			Integer,
+	property :type,			Integer,
+	property :snmp_community,			String,
+	property :snmp_oid,			String,
+	property :snmp_port,			Integer,
+	property :hostid,			Integer,
+	property :description,			String,
+	property :key_,			String,
+	property :delay,			Integer,
+	property :history,			Integer,
+	property :trends,			Integer,
+	property :nextcheck,			DateTime,
+	property :lastvalue,			String,
+	property :lastclock,			DateTime,
+	property :prevvalue,			String,
+	property :status,			Integer,
+	property :value_type,			Integer,
+	property :trapper_hosts,			String,
+	property :units,			String,
+	property :multiplier,			Integer,
+	property :delta,			Integer,
+	property :prevorgvalue,			String,
+	property :snmpv3_securityname,			String,
+	property :snmpv3_securitylevel,			Integer,
+	property :snmpv3_authpassphrase,			String,
+	property :snmpv3_privpassphrase,			String,
+	property :formula,			String,
+	property :error,			String,
+	property :lastlogsize,			Integer,
+	property :logtimefmt,			String,
+	property :templateid,			Integer,
+	property :valuemapid,			Integer,
+	property :delay_flex,			String,
+	property :params,			Text,
+	property :ipmi_sensor,			String,
+	property :data_type,			Integer,
+end
+
+= Items_applications
+class Items_applications
+	include DataMapper::Resource
+
+	property :itemappid,			Integer,
+	property :applicationid,			Integer,
+	property :itemid,			Integer,
+end
+
+= Mappings
+class Mappings
+	include DataMapper::Resource
+
+	property :mappingid,			Integer,
+	property :valuemapid,			Integer,
+	property :value,			String,
+	property :newvalue,			String,
+end
+
+= Media
+class Media
+	include DataMapper::Resource
+
+	property :mediaid,			Integer,
+	property :userid,			Integer,
+	property :mediatypeid,			Integer,
+	property :sendto,			String,
+	property :active,			Integer,
+	property :severity,			Integer,
+	property :period,			String,
+end
+
+= Media_type
+class Media_type
+	include DataMapper::Resource
+
+	property :mediatypeid,			Integer,
+	property :type,			Integer,
+	property :description,			String,
+	property :smtp_server,			String,
+	property :smtp_helo,			String,
+	property :smtp_email,			String,
+	property :exec_path,			String,
+	property :gsm_modem,			String,
+	property :username,			String,
+	property :passwd,			String,
+end
+
+= Profiles
+class Profiles
+	include DataMapper::Resource
+
+	property :profileid,			Integer,
+	property :userid,			Integer,
+	property :idx,			String,
+	property :idx2,			Integer,
+	property :value_id,			Integer,
+	property :value_int,			Integer,
+	property :value_str,			String,
+	property :source,			String,
+	property :type,			Integer,
+end
+
+= Rights
+class Rights
+	include DataMapper::Resource
+
+	property :rightid,			Integer,
+	property :groupid,			Integer,
+	property :permission,			Integer,
+	property :id,			Integer,
+end
+
+= Scripts
+class Scripts
+	include DataMapper::Resource
+
+	property :scriptid,			Integer,
+	property :name,			String,
+	property :command,			String,
+	property :host_access,			Integer,
+	property :usrgrpid,			Integer,
+	property :groupid,			Integer,
+end
+
+= Screens
+class Screens
+	include DataMapper::Resource
+
+	property :screenid,			Integer,
+	property :name,			String,
+	property :hsize,			Integer,
+	property :vsize,			Integer,
+end
+
+= Screens_items
+class Screens_items
+	include DataMapper::Resource
+
+	property :screenitemid,			Integer,
+	property :screenid,			Integer,
+	property :resourcetype,			Integer,
+	property :resourceid,			Integer,
+	property :width,			Integer,
+	property :height,			Integer,
+	property :x,			Integer,
+	property :y,			Integer,
+	property :colspan,			Integer,
+	property :rowspan,			Integer,
+	property :elements,			Integer,
+	property :valign,			Integer,
+	property :halign,			Integer,
+	property :style,			Integer,
+	property :url,			String,
+	property :dynamic,			Integer,
+end
+
+= Services
+class Services
+	include DataMapper::Resource
+
+	property :serviceid,			Integer,
+	property :name,			String,
+	property :status,			Integer,
+	property :algorithm,			Integer,
+	property :triggerid,			Integer,
+	property :showsla,			Integer,
+	property :goodsla,			Float,
+	property :sortorder,			Integer,
+end
+
+= Services_links
+class Services_links
+	include DataMapper::Resource
+
+	property :linkid,			Integer,
+	property :serviceupid,			Integer,
+	property :servicedownid,			Integer,
+	property :soft,			Integer,
+end
+
+= Sessions
+class Sessions
+	include DataMapper::Resource
+
+	property :sessionid,			String,
+	property :userid,			Integer,
+	property :lastaccess,			Integer,
+	property :status,			Integer,
+end
+
+= Sysmaps_links
+class Sysmaps_links
+	include DataMapper::Resource
+
+	property :linkid,			Integer,
+	property :sysmapid,			Integer,
+	property :selementid1,			Integer,
+	property :selementid2,			Integer,
+	property :drawtype,			Integer,
+	property :color,			String,
+end
+
+= Sysmaps_link_triggers
+class Sysmaps_link_triggers
+	include DataMapper::Resource
+
+	property :linktriggerid,			Integer,
+	property :linkid,			Integer,
+	property :triggerid,			Integer,
+	property :drawtype,			Integer,
+	property :color,			String,
+end
+
+= Sysmaps_elements
+class Sysmaps_elements
+	include DataMapper::Resource
+
+	property :selementid,			Integer,
+	property :sysmapid,			Integer,
+	property :elementid,			Integer,
+	property :elementtype,			Integer,
+	property :iconid_off,			Integer,
+	property :iconid_on,			Integer,
+	property :iconid_unknown,			Integer,
+	property :label,			String,
+	property :label_location,			Integer,
+	property :x,			Integer,
+	property :y,			Integer,
+	property :url,			String,
+	property :iconid_disabled,			Integer,
+end
+
+= Sysmaps
+class Sysmaps
+	include DataMapper::Resource
+
+	property :sysmapid,			Integer,
+	property :name,			String,
+	property :width,			Integer,
+	property :height,			Integer,
+	property :backgroundid,			Integer,
+	property :label_type,			Integer,
+	property :label_location,			Integer,
+end
+
+= Triggers
+class Triggers
+	include DataMapper::Resource
+
+	property :triggerid,			Integer,
+	property :expression,			String,
+	property :description,			String,
+	property :url,			String,
+	property :status,			Integer,
+	property :value,			Integer,
+	property :priority,			Integer,
+	property :lastchange,			Integer,
+	property :dep_level,			Integer,
+	property :comments,			ZBX_TYPE_BLOB,
+	property :error,			String,
+	property :templateid,			Integer,
+	property :type,			Integer,
+end
+
+= Trigger_depends
+class Trigger_depends
+	include DataMapper::Resource
+
+	property :triggerdepid,			Integer,
+	property :triggerid_down,			Integer,
+	property :triggerid_up,			Integer,
+end
+
+= Users
+class Users
+	include DataMapper::Resource
+
+	property :userid,			Integer,
+	property :alias,			String,
+	property :name,			String,
+	property :surname,			String,
+	property :passwd,			String,
+	property :url,			String,
+	property :autologin,			Integer,
+	property :autologout,			Integer,
+	property :lang,			String,
+	property :refresh,			Integer,
+	property :type,			Integer,
+	property :theme,			String,
+	property :attempt_failed,			Integer,
+	property :attempt_ip,			String,
+	property :attempt_clock,			Integer,
+end
+
+= Usrgrp
+class Usrgrp
+	include DataMapper::Resource
+
+	property :usrgrpid,			Integer,
+	property :name,			String,
+	property :gui_access,			Integer,
+	property :users_status,			Integer,
+end
+
+= Users_groups
+class Users_groups
+	include DataMapper::Resource
+
+	property :id,			Integer,
+	property :usrgrpid,			Integer,
+	property :userid,			Integer,
+end
+
+= Valuemaps
+class Valuemaps
+	include DataMapper::Resource
+
+	property :valuemapid,			Integer,
+	property :name,			String,
+end
+
+= Maintenances
+class Maintenances
+	include DataMapper::Resource
+
+	property :maintenanceid,			Integer,
+	property :name,			String,
+	property :maintenance_type,			Integer,
+	property :description,			ZBX_TYPE_BLOB,
+	property :active_since,			Integer,
+	property :active_till,			Integer,
+end
+
+= Maintenances_hosts
+class Maintenances_hosts
+	include DataMapper::Resource
+
+	property :maintenance_hostid,			Integer,
+	property :maintenanceid,			Integer,
+	property :hostid,			Integer,
+end
+
+= Maintenances_groups
+class Maintenances_groups
+	include DataMapper::Resource
+
+	property :maintenance_groupid,			Integer,
+	property :maintenanceid,			Integer,
+	property :groupid,			Integer,
+end
+
+= Maintenances_windows
+class Maintenances_windows
+	include DataMapper::Resource
+
+	property :maintenance_timeperiodid,			Integer,
+	property :maintenanceid,			Integer,
+	property :timeperiodid,			Integer,
+end
+
+= Timeperiods
+class Timeperiods
+	include DataMapper::Resource
+
+	property :timeperiodid,			Integer,
+	property :timeperiod_type,			Integer,
+	property :every,			Integer,
+	property :month,			Integer,
+	property :dayofweek,			Integer,
+	property :day,			Integer,
+	property :start_time,			Integer,
+	property :period,			Integer,
+	property :date,			Integer,
+end
+
+= Regexps
+class Regexps
+	include DataMapper::Resource
+
+	property :regexpid,			Integer,
+	property :name,			String,
+	property :test_string,			ZBX_TYPE_BLOB,
+end
+
+= Expressions
+class Expressions
+	include DataMapper::Resource
+
+	property :expressionid,			Integer,
+	property :regexpid,			Integer,
+	property :expression,			String,
+	property :expression_type,			Integer,
+	property :exp_delimiter,			String,
+	property :case_sensitive,			Integer,
+end
+
+	{0}
+};

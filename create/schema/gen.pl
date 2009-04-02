@@ -120,6 +120,7 @@ ZBX_TABLE	tables[]={
 $ruby{"before"}="#!/usr/bin/ruby -w
 
 # ZABBIX
+# Copyright (C) 2000-2005 SIA Zabbix
 # Copyright (C) 2009, Bjoern Rennhak, Centillion (http://www.centillion.co.jp)
 #
 # This program is free software; you can redistribute it and/or modify
@@ -135,7 +136,6 @@ $ruby{"before"}="#!/usr/bin/ruby -w
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
 
 
 # = This is a Ruby DataMapper capsulation, it needs the following gems
@@ -234,6 +234,8 @@ sub newstate
 	$state=$new;
 }
 
+
+# Process Table Subroutine
 sub process_table
 {
 	local $line=$_[0];
@@ -253,24 +255,20 @@ sub process_table
 		}
 		print "\t{\"${table_name}\",\t\"${pkey}\",\t${flags},\n\t\t{\n";
 	}
-	elsif( $output{"type"} eq "rubycode" )
+	elsif( $output{"type"} eq "rubycode" )      # Handle everything Ruby specific
   {
- #	        {"services",    "serviceid",    ZBX_SYNC,
-		if($flags eq "")
-		{
-			$flags="0";
-		}
-		for ($flags) {
-			s/,/ \| /;
-		}
-    print "class ";
-    $_ = ${table_name};
-    $_ =~ s/\b(\w)/\U$1/g;
-    print "$_\n";
-    print "\tinclude DataMapper::Resource\n\n";
-    #print "\t{\"${table_name}\",\t\"${pkey}\",\t${flags},\n\t\t{\n";
+    if( $flags eq "" )  { $flags = "0"; }     # We have no flags, def = 0
+    for( $flags )       { s/,/ \| /; }
 
-  } else
+    my $tableName = ${table_name};
+    $tableName =~ s/\b(\w)/\U$1/g;
+
+    print "= $tableName\n";                                             # RDoc Comment what class it is
+    print "class $tableName\n";
+    print "\tinclude DataMapper::Resource\n\n";                         # Namespace inclusion of DM
+
+
+  } else  # Handle everything which is NOT code
 	{
 		if($pkey ne "")
 		{
@@ -290,6 +288,7 @@ sub process_table
 		print "CREATE TABLE $ifnotexists$table_name (\n";
 	}
 }
+
 
 sub process_field
 {
@@ -318,29 +317,36 @@ sub process_field
 			$rel = "NULL";
 		}
 		print "\t\t{\"${name}\",\t$type,\t${flags},\t${rel}}";
-	} elsif( $output{"type"} eq "rubycode" ) 
+	} elsif( $output{"type"} eq "rubycode" )                    # Handle everything which is ruby
   {
- 		$type=$output{$type_short};
-#{"linkid",      ZBX_TYPE_INT,   ZBX_SYNC},
-		if ($null eq "NOT NULL") {
-			if ($flags ne "0") {
-				$flags="ZBX_NOTNULL | ".$flags;
-			} else {
-				$flags="ZBX_NOTNULL";
-			}
-		}
-		for ($flags) {
-			s/,/ \| /;
-		}
-		if ($rel) {
-			$rel = "\"${rel}\"";
-		} else {
-			$rel = "NULL";
-		}
-    #print "\t\t{\"${name}\",\t$type,\t${flags},\t${rel}}";
+    $type = $output{$type_short};
+    # {"linkid",      ZBX_TYPE_INT,   ZBX_SYNC},
+
+    if ($null eq "NOT NULL")
+    {
+      if ($flags ne "0")
+      {
+        $flags="ZBX_NOTNULL | ".$flags;
+      }
+      else
+      {
+        $flags="ZBX_NOTNULL";
+      }
+    }
+
+    for ($flags) { s/,/ \| /; }
+
+    if ($rel)
+    {
+      $rel = "\"${rel}\"";
+    }
+    else
+    {
+      $rel = "NULL";
+    }
     print "\tproperty :$name,\t\t\t$type";
   }
-	else
+	else                                                      # Handle everything else except code
 	{
 		$a=$output{$type_short};
 		$_=$type;
